@@ -4,6 +4,7 @@ import { Icon } from '../components/ui/Icon';
 import { Modal } from '../components/ui/Modal';
 import { Field, NumberInput, Select, TextArea, TextInput } from '../components/ui/Field';
 import { useStore } from '../store/store';
+import { useExperience } from '../store/experience';
 import { goalProgress } from '../store/selectors';
 import { formatDate, today } from '../lib/date';
 import { uid } from '../lib/id';
@@ -19,6 +20,7 @@ const SOURCE_OPTIONS: Array<{ value: Goal['source']; label: string }> = [
 
 export function GoalsPage() {
   const { state, add, update, remove } = useStore();
+  const { notify } = useExperience();
   const now = today();
   const [modal, setModal] = useState<Goal | 'new' | null>(null);
   const [filter, setFilter] = useState<Domain | 'tous'>('tous');
@@ -130,7 +132,10 @@ export function GoalsPage() {
                       </button>
                     </div>
                   )}
-                  <button className="btn btn-sm" onClick={() => update('goals', g.id, { done: !g.done })}>
+                  <button className="btn btn-sm" onClick={() => {
+                    update('goals', g.id, { done: !g.done });
+                    notify(g.done ? 'Objectif rouvert.' : 'Objectif marqué comme atteint.', () => update('goals', g.id, { done: g.done }));
+                  }}>
                     {g.done ? 'Rouvrir' : 'Atteint'}
                   </button>
                 </div>
@@ -206,6 +211,7 @@ function GoalModal({ initial, onClose, onSave }: { initial?: Goal; onClose: () =
           sourceRef: refOptions.length ? sourceRef || refOptions[0].value : undefined,
           notes: notes.trim() || undefined,
           done: initial?.done ?? false,
+          celebratedAt: initial?.celebratedAt,
         });
         onClose();
       }}

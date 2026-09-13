@@ -87,6 +87,7 @@ export interface BusinessMilestone {
 export type EventRepeat = 'aucune' | 'quotidien' | 'hebdo' | 'mensuel';
 
 export interface CalendarEvent {
+  taskId?: ID;
   id: ID;
   title: string;
   date: string; // YYYY-MM-DD (date de départ pour les récurrences)
@@ -161,6 +162,7 @@ export interface Wish {
 }
 
 export interface Goal {
+  celebratedAt?: string;
   id: ID;
   title: string;
   domain: Domain;
@@ -176,6 +178,7 @@ export interface Goal {
 }
 
 export interface Settings {
+  showLifeScore?: boolean;
   currency: string;
   locale: string;
   theme: 'light' | 'dark' | 'system';

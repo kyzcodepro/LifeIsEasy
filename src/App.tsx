@@ -6,6 +6,7 @@ import { Modal } from './components/ui/Modal';
 import { TransactionModal } from './components/forms/TransactionModal';
 import { EventModal } from './components/forms/EventModal';
 import { TaskModal } from './components/forms/TaskModal';
+import { QuickCapture } from './components/forms/QuickCapture';
 import { useStore } from './store/store';
 import { taskStats } from './store/selectors';
 import { addMonths, monthKey, monthLabel, startOfMonth, today } from './lib/date';
@@ -22,7 +23,7 @@ import { GoalsPage } from './pages/Goals';
 import { StatsPage } from './pages/Stats';
 import { SettingsPage } from './pages/Settings';
 
-const MONTH_PAGES = new Set(['dashboard', 'finance', 'business', 'leisure', 'stats', 'recurring']);
+const MONTH_PAGES = new Set(['finance', 'business', 'leisure', 'stats', 'recurring']);
 
 const SUBTITLES: Record<string, string> = {
   dashboard: 'Votre vie en un coup d’œil',
@@ -63,7 +64,7 @@ export default function App() {
   const { state, setSettings } = useStore();
   const [route, go] = useHashRoute();
   const [month, setMonth] = useState(monthKey(today()));
-  const [quick, setQuick] = useState<null | 'menu' | 'tx' | 'event' | 'task'>(null);
+  const [quick, setQuick] = useState<null | 'menu' | 'tx' | 'event' | 'task' | 'capture'>(null);
 
   // Thème : clair / sombre / système
   useEffect(() => {
@@ -112,7 +113,7 @@ export default function App() {
       case 'settings':
         return <SettingsPage />;
       default:
-        return <Dashboard month={month} onNavigate={go} />;
+        return <Dashboard onNavigate={go} />;
     }
   };
 
@@ -173,7 +174,7 @@ export default function App() {
 
       <MobileNav current={route} onNavigate={go} />
 
-      <button className="btn btn-primary fab" onClick={() => setQuick('menu')}>
+      <button className="btn btn-primary fab" onClick={() => setQuick('capture')}>
         <Icon name="plus" size={16} />
         Ajouter
       </button>
@@ -203,6 +204,7 @@ export default function App() {
       {quick === 'tx' && <TransactionModal onClose={() => setQuick(null)} />}
       {quick === 'event' && <EventModal onClose={() => setQuick(null)} />}
       {quick === 'task' && <TaskModal onClose={() => setQuick(null)} />}
+      {quick === 'capture' && <QuickCapture onClose={() => setQuick(null)} />}
     </div>
   );
 }

@@ -2,6 +2,9 @@ import { useMemo, useState } from 'react';
 import { Card, StatTile } from '../components/ui/Card';
 import { Icon } from '../components/ui/Icon';
 import { EventModal } from '../components/forms/EventModal';
+import { ScheduleTask } from '../components/forms/ScheduleTask';
+import { useExperience } from '../store/experience';
+import { TASK_DRAG_TYPE } from '../lib/planning';
 import { useStore } from '../store/store';
 import { eventsOn, plannedMinutesByDomain } from '../store/selectors';
 import {
@@ -9,14 +12,16 @@ import {
   minutesBetween, minutesToTime, startOfMonth, startOfWeek, timeToMinutes, today, toISO,
 } from '../lib/date';
 import { DOMAIN_META, domainColor } from '../lib/domains';
-import type { CalendarEvent, Domain } from '../types';
+import type { CalendarEvent, Domain, Task } from '../types';
 
-const HOUR_START = 6;
+const HOUR_START = 0;
 const HOUR_END = 24;
 const SLOT_H = 44;
 
 export function CalendarPage() {
   const { state, update } = useStore();
+  const { schedule, notify, complete } = useExperience();
+  const [planning, setPlanning] = useState<Task | null>(null);
   const now = today();
   const [view, setView] = useState<'semaine' | 'mois'>('semaine');
   const [anchor, setAnchor] = useState(now);
@@ -43,14 +48,27 @@ export function CalendarPage() {
       : `${MONTH_NAMES[fromISO(anchor).getMonth()]} ${fromISO(anchor).getFullYear()}`;
 
   const toggleDone = (ev: CalendarEvent, date: string) => {
+    const task = state.tasks.find((t) => t.id === ev.taskId);
+    if (task) { complete(task); return; }
     const doneDates = ev.doneDates ?? [];
     update('events', ev.id, {
       doneDates: doneDates.includes(date) ? doneDates.filter((d) => d !== date) : [...doneDates, date],
     });
+    notify('Validation de l’événement modifiée.', () => update('events', ev.id, { doneDates }));
   };
 
   return (
     <>
+      <Card title="Tâches à placer" subtitle="Glissez sur un créneau (sur un jour en vue mois : 9 h), ou utilisez Planifier sur mobile et au clavier.">
+        <div className="task-tray">{state.tasks.filter((t) => !t.done).map((task) => <div className="task-drag" key={task.id} draggable onDragStart={(e) => {
+          e.dataTransfer.setData(TASK_DRAG_TYPE, task.id);
+          e.dataTransfer.effectAllowed = 'move';
+        }}>
+          <span>{task.title}<small>{state.events.some((e) => e.taskId === task.id) ? 'Déjà planifiée · glisser pour déplacer' : `${task.estimate || 30} min`}</small></span>
+          <button className="btn btn-sm" onClick={() => setPlanning(task)} aria-label={`Planifier ${task.title}`}>Planifier</button>
+        </div>)}</div>
+        {!state.tasks.some((t) => !t.done) && <p className="small muted">Toutes vos tâches sont terminées.</p>}
+      </Card>
       <div className="flex flex-wrap">
         <div className="segmented">
           <button aria-pressed={view === 'semaine'} onClick={() => setView('semaine')}>
@@ -103,7 +121,7 @@ export function CalendarPage() {
       )}
 
       {view === 'semaine' ? (
-        <Card>
+        <Card className="weekly-grid-card">
           <div className="cal-scroll">
             <div className="cal-grid" style={{ gridTemplateRows: 'auto 1fr' }}>
               <div className="cal-corner" />
@@ -130,6 +148,7 @@ export function CalendarPage() {
                   onCreate={(start) => setCreating({ date: day, start })}
                   onOpen={setEditing}
                   onToggleDone={toggleDone}
+                  onTaskDrop={(id, start) => schedule(id, day, start)}
                 />
               ))}
             </div>
@@ -144,8 +163,19 @@ export function CalendarPage() {
           </div>
         </Card>
       ) : (
-        <MonthView state={state} anchor={anchor} onPick={(d) => setCreating({ date: d, start: '09:00' })} onOpen={setEditing} />
+        <MonthView state={state} anchor={anchor} onPick={(d) => setCreating({ date: d, start: '09:00' })} onOpen={setEditing} onTaskDrop={(id, date) => schedule(id, date, '09:00')} />
       )}
+
+      {view === 'semaine' && <Card className="mobile-agenda" title="Ma semaine">
+        {days.map((date) => <section key={date} className="mobile-agenda-day">
+          <div className="flex"><h3>{fromISO(date).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'short' })}</h3><span className="spacer" /><button className="btn btn-sm" onClick={() => setCreating({ date, start: '09:00' })} aria-label={`Ajouter un événement le ${date}`}>+</button></div>
+          {eventsOn(state, date).map((event) => <div className="row" key={event.id}>
+            <button className="checkbox" aria-label={`${event.doneDates?.includes(date) ? 'Rouvrir' : 'Valider'} ${event.title}`} aria-pressed={event.doneDates?.includes(date) ?? false} onClick={() => toggleDone(event, date)}><Icon name="check" size={16} /></button>
+            <button className="mobile-event-open" onClick={() => setEditing(event)}><strong>{event.title}</strong><span>{event.start} – {event.end}</span></button>
+          </div>)}
+          {!eventsOn(state, date).length && <p className="small muted">Journée libre.</p>}
+        </section>)}
+      </Card>}
 
       {view === 'semaine' && (
         <Card title="Répartition du temps planifié" subtitle="Semaine en cours, par domaine de vie">
@@ -174,6 +204,7 @@ export function CalendarPage() {
 
       {editing && <EventModal initial={editing} onClose={() => setEditing(null)} />}
       {creating && <EventModal defaultDate={creating.date} defaultStart={creating.start} onClose={() => setCreating(null)} />}
+      {planning && <ScheduleTask task={planning} onClose={() => setPlanning(null)} />}
     </>
   );
 }
@@ -184,13 +215,16 @@ function DayColumn({
   onCreate,
   onOpen,
   onToggleDone,
+  onTaskDrop,
 }: {
   date: string;
   events: CalendarEvent[];
   onCreate: (start: string) => void;
   onOpen: (e: CalendarEvent) => void;
   onToggleDone: (e: CalendarEvent, date: string) => void;
+  onTaskDrop: (id: string, start: string) => void;
 }) {
+  const [dropTime, setDropTime] = useState<string | null>(null);
   const height = (HOUR_END - HOUR_START) * SLOT_H;
 
   // Placement côte à côte des événements qui se chevauchent
@@ -206,6 +240,22 @@ function DayColumn({
   return (
     <div
       className="cal-col"
+      onDragOver={(e) => {
+        if (!e.dataTransfer.types.includes(TASK_DRAG_TYPE)) return;
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        const y = e.clientY - e.currentTarget.getBoundingClientRect().top;
+        setDropTime(minutesToTime(Math.max(HOUR_START * 60, Math.min(1410, HOUR_START * 60 + Math.floor(y / SLOT_H * 2) * 30))));
+      }}
+      onDragLeave={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setDropTime(null); }}
+      onDrop={(e) => {
+        if (!e.dataTransfer.types.includes(TASK_DRAG_TYPE)) return;
+        e.preventDefault();
+        const y = e.clientY - e.currentTarget.getBoundingClientRect().top;
+        const start = minutesToTime(Math.max(HOUR_START * 60, Math.min(1410, HOUR_START * 60 + Math.floor(y / SLOT_H * 2) * 30)));
+        onTaskDrop(e.dataTransfer.getData(TASK_DRAG_TYPE), start);
+        setDropTime(null);
+      }}
       style={{
         height,
         background:
@@ -218,6 +268,7 @@ function DayColumn({
         onCreate(minutesToTime(Math.min(mins, (HOUR_END - 1) * 60)));
       }}
     >
+      {dropTime && <div className="drop-slot" style={{ top: (timeToMinutes(dropTime) - HOUR_START * 60) / 60 * SLOT_H }}>{dropTime}</div>}
       {positioned.map(({ ev, s, e, col, cols }) => {
         const top = ((s - HOUR_START * 60) / 60) * SLOT_H;
         const h = Math.max(20, ((e - s) / 60) * SLOT_H - 2);
@@ -235,17 +286,10 @@ function DayColumn({
               color: domainColor(ev.domain),
               background: `color-mix(in srgb, ${domainColor(ev.domain)} 14%, var(--surface))`,
             }}
-            onClick={(evt) => {
-              evt.stopPropagation();
-              onOpen(ev);
-            }}
-            onDoubleClick={(evt) => {
-              evt.stopPropagation();
-              onToggleDone(ev, date);
-            }}
-            title={`${ev.title} · ${ev.start}–${ev.end} — double-clic pour marquer comme fait`}
+            title={`${ev.title} · ${ev.start}–${ev.end}`}
           >
-            <div className="ttl">{ev.title}</div>
+            <button className="cal-open" onClick={() => onOpen(ev)} aria-label={`Modifier ${ev.title}`}><span className="ttl">{ev.title}</span></button>
+            <button className="cal-validate" onClick={() => onToggleDone(ev, date)} aria-pressed={done} aria-label={`${done ? 'Rouvrir' : 'Valider'} ${ev.title}`}><Icon name="check" size={13} /></button>
             {h > 32 && (
               <div className="hr">
                 {ev.start} – {ev.end} · {formatDuration(minutesBetween(ev.start, ev.end))}
@@ -263,11 +307,13 @@ function MonthView({
   anchor,
   onPick,
   onOpen,
+  onTaskDrop,
 }: {
   state: ReturnType<typeof useStore>['state'];
   anchor: string;
   onPick: (d: string) => void;
   onOpen: (e: CalendarEvent) => void;
+  onTaskDrop: (id: string, date: string) => void;
 }) {
   const now = today();
   const first = startOfMonth(anchor);
@@ -292,6 +338,8 @@ function MonthView({
             <div
               key={d}
               className={`month-cell${out ? ' out' : ''}${d === now ? ' today' : ''}`}
+              onDragOver={(e) => { if (e.dataTransfer.types.includes(TASK_DRAG_TYPE)) e.preventDefault(); }}
+              onDrop={(e) => { if (!e.dataTransfer.types.includes(TASK_DRAG_TYPE)) return; e.preventDefault(); onTaskDrop(e.dataTransfer.getData(TASK_DRAG_TYPE), d); }}
               onClick={() => onPick(d)}
               role="button"
               tabIndex={0}
@@ -317,8 +365,7 @@ function MonthView({
         })}
       </div>
       <p className="small muted" style={{ marginTop: 10 }}>
-        Astuce : cliquez sur un jour pour y ajouter un événement. Dans la vue semaine, un double-clic sur un événement le
-        marque comme fait (suivi du temps réellement tenu).
+        Cliquez sur un jour pour ajouter un événement. Dans la vue semaine, la coche d’un événement permet de le valider.
       </p>
       <span hidden>{toISO(new Date())}</span>
     </Card>

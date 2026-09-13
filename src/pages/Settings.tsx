@@ -64,6 +64,10 @@ export function SettingsPage() {
 
   return (
     <>
+      <Card title="Progression personnelle" subtitle="Choisissez ce qui vous aide, sans obligation de score.">
+        <label className="preference-toggle"><input type="checkbox" checked={state.settings.showLifeScore === true} onChange={(e) => setSettings({ showLifeScore: e.target.checked })} /> Afficher mon indicateur personnel (ancien score de vie)</label>
+        <p className="small muted">Masqué par défaut. Si vous l’activez, le détail du calcul est disponible sur l’accueil et dans Statistiques. Il reflète uniquement vos données saisies.</p>
+      </Card>
       <div className="grid grid-kpi">
         <StatTile label="Opérations" value={String(counts.transactions)} foot="enregistrées" small />
         <StatTile label="Événements" value={String(counts.events)} foot="dans l’agenda" small />

@@ -5,6 +5,7 @@ import { Modal } from '../components/ui/Modal';
 import { Field, NumberInput, Select, TextInput } from '../components/ui/Field';
 import { Heatmap } from '../components/charts/Heatmap';
 import { useStore } from '../store/store';
+import { useExperience } from '../store/experience';
 import { habitDone, habitStats, habitsCompletion } from '../store/selectors';
 import { DAY_SHORT, addDays, isoWeekDays, startOfWeek, today } from '../lib/date';
 import { uid } from '../lib/id';
@@ -12,7 +13,8 @@ import { DOMAIN_META, DOMAIN_OPTIONS, domainColor } from '../lib/domains';
 import type { Domain, Habit } from '../types';
 
 export function HabitsPage() {
-  const { state, add, update, remove, toggleHabit } = useStore();
+  const { state, add, update, remove } = useStore();
+  const { toggleHabit } = useExperience();
   const now = today();
   const [modal, setModal] = useState<Habit | 'new' | null>(null);
   const [focus, setFocus] = useState<string>('all');

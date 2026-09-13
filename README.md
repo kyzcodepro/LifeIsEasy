@@ -10,7 +10,7 @@ navigateur (localStorage) et s'exportent/s'importent en JSON. Prête à déploye
 
 | Module | Ce qu'il fait | Ce qui est tracké |
 |---|---|---|
-| **Tableau de bord** | Vue d'ensemble de la journée et du mois | Patrimoine net, revenus, dépenses, reste du mois, score de vie /100 |
+| **Tableau de bord** | Trois priorités, prochaine action, agenda et habitudes du jour | Validation avec annulation, report rapide et capture d’une idée |
 | **Calendrier** | Vue semaine (lundi → dimanche, heure par heure) et vue mois, événements récurrents, création par clic sur une plage | Temps planifié par domaine, temps libre, événements tenus (double-clic) |
 | **Tâches** | Priorités, échéances, domaines, durée estimée, rattachement à un business | Ouvertes, en retard, terminées par semaine, charge estimée |
 | **Finances** | Opérations (dépense/revenu), comptes multiples, filtres et recherche | Solde par compte, patrimoine net, taux d'épargne, dépenses par catégorie, revenus par source |
@@ -39,7 +39,19 @@ Autres scripts :
 ```bash
 npm run build    # vérification TypeScript + build de production dans dist/
 npm run preview  # sert le build de production
+npm run test:experience # priorités, planification, annulation et rendu des routes
 ```
+
+## Parcours du quotidien
+
+- L’accueil affiche au plus trois tâches ouvertes dues aujourd’hui, en retard ou sans date, triées par priorité puis échéance. Les autres modules restent dans la navigation.
+- « Une idée, une tâche » enregistre une phrase sans échéance, avec une option pour aujourd’hui. Le bouton flottant mobile ouvre directement cette saisie.
+- Les tâches se planifient par glisser-déposer dans la semaine (pas de 30 minutes), dans le mois (9 h), ou par le bouton **Planifier**, utilisable au clavier et sur mobile. Une tâche déjà planifiée déplace son créneau ; les conflits et dépassements de minuit sont refusés.
+- Le report décale au lendemain de l’échéance, ou à demain si la tâche est en retard ou sans date. Son créneau lié suit le report si l’horaire est libre.
+- Le message **Annuler** restaure la dernière validation, le report ou la planification proposés par ces raccourcis. La validation d’une tâche planifiée met également à jour son événement.
+- Sur téléphone, l’agenda hebdomadaire devient une liste par jour. Les validations et les modales restent accessibles au clavier.
+- L’indicateur personnel (ancien score de vie) est masqué par défaut. Activez-le dans **Réglages → Progression personnelle** ; son calcul détaillé apparaît sur l’accueil et dans Statistiques.
+- Les confettis sont réservés au premier objectif atteint depuis l’utilisation de l’app. Le marqueur est conservé dans la sauvegarde ; les objectifs déjà atteints au chargement ne sont pas célébrés. Le réglage système de réduction des animations est respecté.
 
 ## Déploiement sur Vercel
 

@@ -2,6 +2,9 @@ import { useMemo, useState } from 'react';
 import { Card, EmptyState, StatTile } from '../components/ui/Card';
 import { Icon } from '../components/ui/Icon';
 import { TaskModal } from '../components/forms/TaskModal';
+import { ScheduleTask } from '../components/forms/ScheduleTask';
+import { QuickCapture } from '../components/forms/QuickCapture';
+import { useExperience } from '../store/experience';
 import { useStore } from '../store/store';
 import { taskStats } from '../store/selectors';
 import { addDays, formatDuration, relativeDay, today } from '../lib/date';
@@ -11,7 +14,9 @@ import type { Domain, Task } from '../types';
 type Filter = 'toutes' | 'aujourdhui' | 'semaine' | 'retard' | 'terminees';
 
 export function TasksPage() {
-  const { state, update, remove } = useStore();
+  const { state, remove } = useStore();
+  const { complete, postpone } = useExperience();
+  const [planning, setPlanning] = useState<Task | null>(null);
   const now = today();
   const [filter, setFilter] = useState<Filter>('toutes');
   const [domain, setDomain] = useState<Domain | 'tous'>('tous');
@@ -96,8 +101,9 @@ export function TasksPage() {
               <div className="row" key={t.id}>
                 <button
                   className={`checkbox${t.done ? ' on' : ''}`}
-                  aria-label={t.done ? 'Rouvrir' : 'Terminer'}
-                  onClick={() => update('tasks', t.id, t.done ? { done: false, doneAt: undefined } : { done: true, doneAt: now })}
+                  aria-label={`${t.done ? 'Rouvrir' : 'Terminer'} ${t.title}`}
+                  aria-pressed={t.done}
+                  onClick={() => complete(t)}
                 >
                   <Icon name="check" size={12} />
                 </button>
@@ -114,6 +120,8 @@ export function TasksPage() {
                   </div>
                 </div>
                 <div className="row-actions">
+                  {!t.done && <><button className="btn btn-sm" onClick={() => postpone(t)} aria-label={`Reporter ${t.title} au lendemain`}>+1 jour</button>
+                  <button className="btn btn-sm" onClick={() => setPlanning(t)}>Planifier</button></>}
                   <button className="btn btn-ghost btn-icon" onClick={() => setEditing(t)} aria-label="Modifier">
                     <Icon name="edit" size={14} />
                   </button>
@@ -133,7 +141,8 @@ export function TasksPage() {
         )}
       </Card>
 
-      {creating && <TaskModal onClose={() => setCreating(false)} />}
+      {creating && <QuickCapture onClose={() => setCreating(false)} />}
+      {planning && <ScheduleTask task={planning} onClose={() => setPlanning(null)} />}
       {editing && <TaskModal initial={editing} onClose={() => setEditing(null)} />}
     </>
   );

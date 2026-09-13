@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { PersonalScore } from '../components/ui/PersonalScore';
 import { Card, StatTile } from '../components/ui/Card';
 import { BarChart } from '../components/charts/BarChart';
 import { LineChart } from '../components/charts/LineChart';
@@ -7,7 +8,7 @@ import { slotColor } from '../components/charts/util';
 import { useMoney, useStore } from '../store/store';
 import {
   budgetLines, businessStats, cashflow, expensesByCategory, habitsCompletion,
-  leisureMonth, lifeScore, monthRange, monthTotals, monthTotalsUpTo, plannedMinutesByDomain,
+  leisureMonth, monthRange, monthTotals, monthTotalsUpTo, plannedMinutesByDomain,
 } from '../store/selectors';
 import { addDays, addMonths, formatDuration, fromISO, monthKey, monthLabel, startOfWeek, startOfMonth, today } from '../lib/date';
 import { DOMAIN_META, domainColor } from '../lib/domains';
@@ -20,7 +21,7 @@ export function StatsPage({ month }: { month: string }) {
 
   const flow = cashflow(state, 12, `${month}-15`);
   const totals = monthTotals(state, month);
-  const score = lifeScore(state, now);
+
   const { from, to } = monthRange(month);
 
   // Temps : événements planifiés + séances de loisir, par domaine
@@ -73,37 +74,13 @@ export function StatsPage({ month }: { month: string }) {
   return (
     <>
       <div className="grid grid-kpi">
-        <StatTile label="Score de vie" value={`${score.total}/100`} foot="moyenne des 5 domaines" />
+
         <StatTile label="Taux d’épargne" value={`${totals.savingRate.toFixed(0)} %`} foot={monthLabel(month)} />
         <StatTile label="Temps tracké" value={formatDuration(totalMinutes)} foot="agenda + séances loisirs" />
         <StatTile label="Budgets dépassés" value={String(overBudget.length)} foot={`sur ${budgets.length} budgets suivis`} />
       </div>
 
-      <Card title="Équilibre de vie" subtitle="Score par domaine, calculé à partir de toutes vos données">
-        <div className="grid grid-kpi" style={{ gap: 10 }}>
-          {score.parts.map((p) => (
-            <div key={p.label}>
-              <div className="flex small" style={{ marginBottom: 4 }}>
-                <span style={{ fontWeight: 550 }}>{p.label}</span>
-                <div className="spacer" />
-                <span className="tnum">{p.value}</span>
-              </div>
-              <div className="progress">
-                <span
-                  style={{
-                    width: `${p.value}%`,
-                    background: p.value >= 70 ? 'var(--good)' : p.value >= 40 ? 'var(--warning)' : 'var(--critical)',
-                  }}
-                />
-              </div>
-            </div>
-          ))}
-        </div>
-        <p className="small muted" style={{ marginTop: 10 }}>
-          Finances = taux d’épargne et budgets tenus · Productivité = tâches en retard · Santé = régularité des habitudes ·
-          Business = atteinte des objectifs de CA · Loisirs = heures face aux objectifs.
-        </p>
-      </Card>
+      <PersonalScore />
 
       <div className="grid grid-2">
         <Card title="Revenus et dépenses" subtitle="12 derniers mois">

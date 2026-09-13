@@ -21,6 +21,7 @@ export const emptyState = (): AppState => ({
     weekStartsMonday: true,
     userName: '',
     monthlySavingGoal: 400,
+    showLifeScore: false,
   },
   accounts: [],
   categories: [],
