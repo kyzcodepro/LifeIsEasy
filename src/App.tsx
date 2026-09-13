@@ -168,7 +168,7 @@ export default function App() {
           </div>
         </header>
 
-        <main id="main-content" tabIndex={-1} className="page">{page()}</main>
+        <main key={route} id="main-content" tabIndex={-1} className="page">{page()}</main>
       </div>
 
       <MobileNav current={route} onNavigate={go} />
