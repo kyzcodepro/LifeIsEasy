@@ -12,7 +12,6 @@ import { taskStats } from './store/selectors';
 import { addMonths, monthKey, monthLabel, startOfMonth, today } from './lib/date';
 
 import { Dashboard } from './pages/Dashboard';
-import { AssistantPage } from './pages/Assistant';
 import { CalendarPage } from './pages/Calendar';
 import { TasksPage } from './pages/Tasks';
 import { FinancePage } from './pages/Finance';
@@ -28,7 +27,6 @@ const MONTH_PAGES = new Set(['finance', 'business', 'leisure', 'stats', 'recurri
 
 const SUBTITLES: Record<string, string> = {
   dashboard: 'Votre vie en un coup d’œil',
-  assistant: 'Dites-le en une phrase, je le range au bon endroit',
   calendar: 'Planifiez votre semaine, heure par heure',
   tasks: 'Tout ce qu’il y a à faire, par domaine',
   finance: 'Dépenses, revenus, comptes et budgets',
@@ -94,8 +92,6 @@ export default function App() {
 
   const page = () => {
     switch (route) {
-      case 'assistant':
-        return <AssistantPage onNavigate={go} />;
       case 'calendar':
         return <CalendarPage />;
       case 'tasks':

@@ -10,7 +10,6 @@ export interface NavRoute {
 
 export const ROUTES: NavRoute[] = [
   { id: 'dashboard', label: 'Tableau de bord', short: 'Accueil', icon: 'dashboard', group: 'Pilotage' },
-  { id: 'assistant', label: 'Assistant', short: 'Assistant', icon: 'chat', group: 'Pilotage' },
   { id: 'calendar', label: 'Calendrier', short: 'Agenda', icon: 'calendar', group: 'Pilotage' },
   { id: 'tasks', label: 'Tâches', short: 'Tâches', icon: 'check', group: 'Pilotage' },
   { id: 'finance', label: 'Finances', short: 'Argent', icon: 'wallet', group: 'Argent' },

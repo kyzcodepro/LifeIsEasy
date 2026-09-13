@@ -185,8 +185,6 @@ export interface Settings {
   weekStartsMonday: boolean;
   userName: string;
   monthlySavingGoal: number;
-  /** Envoyer la phrase dès la fin de la dictée, sans relecture. */
-  voiceAutoSend?: boolean;
 }
 
 export interface AppState {
