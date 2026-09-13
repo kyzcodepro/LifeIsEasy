@@ -8,6 +8,7 @@ import { StoreProvider } from '../src/store/store';
 import { ExperienceProvider } from '../src/store/experience';
 import { AssistantPage } from '../src/pages/Assistant';
 import { clearTranscript, getTranscript, setTranscript } from '../src/lib/transcript';
+import { createSpeechSession, speechErrorMessage, speechSupported } from '../src/lib/speech';
 import { monthKey } from '../src/lib/date';
 
 const state = seedState();
@@ -223,5 +224,138 @@ test('La page Assistant se rend sans erreur avec les données de démonstration'
     </StoreProvider>,
   );
   assert.match(html, /Assistant/);
-  assert.match(html, /aucune donnée ne quitte votre appareil/i);
+  assert.match(html, /votre texte n’est jamais envoyé/i);
+});
+
+/* ------------------------------------------------------------ Dictée vocale */
+
+type Handlers = { onresult: ((e: unknown) => void) | null; onerror: ((e: unknown) => void) | null; onend: (() => void) | null };
+
+/** Faux moteur de reconnaissance : rejoue ce qu'un navigateur enverrait. */
+function installFakeSpeech(options: { throwOnStart?: boolean } = {}) {
+  const calls: string[] = [];
+  let live: (RecognitionStub | null) = null;
+
+  class RecognitionStub {
+    lang = '';
+    continuous = false;
+    interimResults = false;
+    maxAlternatives = 0;
+    onresult: Handlers['onresult'] = null;
+    onerror: Handlers['onerror'] = null;
+    onend: Handlers['onend'] = null;
+    onstart: (() => void) | null = null;
+    constructor() {
+      live = this;
+    }
+    start() {
+      calls.push('start');
+      if (options.throwOnStart) throw new Error('déjà démarré');
+    }
+    stop() {
+      calls.push('stop');
+    }
+    abort() {
+      calls.push('abort');
+    }
+  }
+
+  const previous = (globalThis as Record<string, unknown>).window;
+  (globalThis as Record<string, unknown>).window = { SpeechRecognition: RecognitionStub };
+  return {
+    calls,
+    get recognition() {
+      return live;
+    },
+    restore: () => {
+      if (previous === undefined) delete (globalThis as Record<string, unknown>).window;
+      else (globalThis as Record<string, unknown>).window = previous;
+    },
+  };
+}
+
+const speechEvent = (chunks: Array<{ text: string; isFinal: boolean }>) => ({
+  resultIndex: 0,
+  results: Object.assign(
+    chunks.map((c) => Object.assign([{ transcript: c.text }], { isFinal: c.isFinal })),
+    { length: chunks.length },
+  ),
+});
+
+test('Sans API de reconnaissance, la dictée se déclare indisponible', () => {
+  assert.equal(speechSupported(), false);
+  assert.equal(createSpeechSession('fr-FR', { onPartial() {}, onFinal() {}, onError() {}, onEnd() {} }), null);
+});
+
+test('Dictée : configuration, texte provisoire puis texte définitif', () => {
+  const fake = installFakeSpeech();
+  try {
+    assert.equal(speechSupported(), true);
+    const partials: string[] = [];
+    const finals: string[] = [];
+    const session = createSpeechSession('fr-FR', {
+      onPartial: (t) => partials.push(t),
+      onFinal: (t) => finals.push(t),
+      onError: () => {},
+      onEnd: () => {},
+    });
+    assert.ok(session);
+    session!.start();
+    assert.deepEqual(fake.calls, ['start']);
+    assert.equal(fake.recognition!.lang, 'fr-FR');
+    assert.equal(fake.recognition!.interimResults, true);
+    assert.equal(fake.recognition!.continuous, false);
+
+    fake.recognition!.onresult?.(speechEvent([{ text: 'j’ai payé 32', isFinal: false }]));
+    fake.recognition!.onresult?.(speechEvent([{ text: '  j’ai payé 32 € au restaurant  ', isFinal: true }]));
+    fake.recognition!.onresult?.(speechEvent([{ text: '   ', isFinal: true }]));
+
+    assert.deepEqual(partials, ['j’ai payé 32']);
+    assert.deepEqual(finals, ['j’ai payé 32 € au restaurant']);
+
+    session!.stop();
+    assert.deepEqual(fake.calls, ['start', 'stop']);
+  } finally {
+    fake.restore();
+  }
+});
+
+test('Dictée : une erreur du navigateur devient un message actionnable', () => {
+  const fake = installFakeSpeech();
+  try {
+    const errors: string[] = [];
+    let ended = 0;
+    const session = createSpeechSession('fr-FR', {
+      onPartial: () => {},
+      onFinal: () => {},
+      onError: (m) => errors.push(m),
+      onEnd: () => { ended += 1; },
+    });
+    session!.start();
+    fake.recognition!.onerror?.({ error: 'not-allowed' });
+    fake.recognition!.onend?.();
+    assert.equal(errors.length, 1);
+    assert.match(errors[0], /Autorisez l’accès au microphone/);
+    assert.equal(ended, 1);
+  } finally {
+    fake.restore();
+  }
+});
+
+test('Dictée : un start() refusé par le navigateur ne casse pas la page', () => {
+  const fake = installFakeSpeech({ throwOnStart: true });
+  try {
+    const session = createSpeechSession('fr-FR', { onPartial() {}, onFinal() {}, onError() {}, onEnd() {} });
+    assert.doesNotThrow(() => session!.start());
+    assert.doesNotThrow(() => session!.stop());
+  } finally {
+    fake.restore();
+  }
+});
+
+test('Chaque code d’erreur a son message en français', () => {
+  assert.match(speechErrorMessage('audio-capture'), /micro/i);
+  assert.match(speechErrorMessage('no-speech'), /rien entendu/i);
+  assert.match(speechErrorMessage('network'), /injoignable/i);
+  assert.match(speechErrorMessage('inconnu'), /réessayez/i);
 });

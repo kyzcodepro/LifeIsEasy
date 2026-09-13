@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Card } from '../components/ui/Card';
 import { Icon } from '../components/ui/Icon';
+import { MicButton } from '../components/ui/MicButton';
+import { speechSupported } from '../lib/speech';
 import { useMoney, useStore } from '../store/store';
 import { useExperience } from '../store/experience';
 import { parseMessage } from '../lib/nlu';
@@ -32,7 +34,7 @@ const EXAMPLES = [
 
 export function AssistantPage({ onNavigate }: { onNavigate: (id: string) => void }) {
   const store = useStore();
-  const { state, add, remove } = store;
+  const { state, add, remove, setSettings } = store;
   const { notify } = useExperience();
   const money = useMoney();
   const now = today();
@@ -42,6 +44,10 @@ export function AssistantPage({ onNavigate }: { onNavigate: (id: string) => void
     return kept.length ? kept : [{ ...WELCOME, details: EXAMPLES.slice(0, 3).map((e) => `« ${e} »`) }];
   });
   const logRef = useRef<HTMLDivElement | null>(null);
+  const [listening, setListening] = useState(false);
+  const [voiceNotice, setVoiceNotice] = useState('');
+  const [micAvailable] = useState(() => speechSupported());
+  const autoSend = state.settings.voiceAutoSend ?? false;
 
   // Le fil survit aux changements de page (mais pas à un rechargement complet).
   useEffect(() => {
@@ -275,7 +281,7 @@ export function AssistantPage({ onNavigate }: { onNavigate: (id: string) => void
     <>
       <Card
         title="Assistant"
-        subtitle="Analyse locale de vos phrases — aucune donnée ne quitte votre appareil"
+        subtitle="Analyse locale : votre texte n’est jamais envoyé"
         className="chat-card"
         actions={
           messages.length > 1 ? (
@@ -368,17 +374,59 @@ export function AssistantPage({ onNavigate }: { onNavigate: (id: string) => void
             className="input"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Ex. : j’ai payé 45 € de courses hier, et rappelle-moi d’appeler la banque lundi"
+            placeholder={listening ? 'Je vous écoute…' : 'Ex. : j’ai payé 45 € de courses hier, et rappelle-moi d’appeler la banque lundi'}
             aria-label="Votre phrase"
             autoComplete="off"
+          />
+          <MicButton
+            lang={state.settings.locale}
+            onListeningChange={(value) => {
+              setListening(value);
+              if (value) setVoiceNotice('');
+            }}
+            onPartial={(text) => setInput(text)}
+            onFinal={(text) => {
+              setInput(text);
+              if (autoSend) send(text);
+            }}
+            onError={setVoiceNotice}
           />
           <button className="btn btn-primary" type="submit" aria-label="Envoyer">
             <Icon name="send" size={16} />
           </button>
         </form>
+
+        {micAvailable && (
+          <div className="voice-bar">
+            {listening ? (
+              <span className="voice-status" role="status">
+                <span className="voice-dot" />
+                Je vous écoute — parlez, puis marquez une pause.
+              </span>
+            ) : voiceNotice ? (
+              <span className="voice-status warn" role="status">
+                {voiceNotice}
+              </span>
+            ) : (
+              <span className="small muted">
+                Dictée : la reconnaissance vocale est celle de votre navigateur — selon lui, l’audio peut passer par son
+                service en ligne. Le texte obtenu, lui, reste analysé sur votre appareil.
+              </span>
+            )}
+            <div className="spacer" />
+            <label className="preference-toggle small">
+              <input
+                type="checkbox"
+                checked={autoSend}
+                onChange={(e) => setSettings({ voiceAutoSend: e.target.checked })}
+              />
+              Envoyer sans relire
+            </label>
+          </div>
+        )}
       </Card>
 
-      <Card title="Ce que je comprends" subtitle="Sans connexion, sans clé, sans envoi de données">
+      <Card title="Ce que je comprends" subtitle="Sans clé d’API ni compte : l’analyse tourne sur votre appareil">
         <div className="grid grid-2">
           <div>
             <h3 style={{ marginBottom: 6 }}>Créer</h3>
@@ -389,6 +437,7 @@ export function AssistantPage({ onNavigate }: { onNavigate: (id: string) => void
               <li>Séances de loisir : « j’ai joué 1h30 de guitare »</li>
               <li>Habitudes et objectifs : « habitude sport 4 fois par semaine »</li>
               <li>Plusieurs éléments d’un coup : « courses 54 € et essence 40 € »</li>
+              <li>Au micro : dictez la phrase au lieu de la taper (bouton micro, si votre navigateur le gère)</li>
             </ul>
           </div>
           <div>

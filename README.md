@@ -10,7 +10,7 @@ navigateur (localStorage) et s'exportent/s'importent en JSON. Prête à déploye
 
 | Module | Ce qu'il fait | Ce qui est tracké |
 |---|---|---|
-| **Assistant** | Un chat où vous écrivez en français : « j'ai payé 32 € au restaurant hier », « rappelle-moi d'appeler le comptable jeudi à 14h ». L'app crée l'élément au bon endroit et vous pouvez annuler d'un clic | Analyse **100 % locale** (aucune clé, aucun appel réseau) ; répond aussi à vos questions sur vos données |
+| **Assistant** | Un chat où vous écrivez — ou dictez au micro — en français : « j'ai payé 32 € au restaurant hier », « rappelle-moi d'appeler le comptable jeudi à 14h ». L'app crée l'élément au bon endroit et vous pouvez annuler d'un clic | Analyse **100 % locale** (aucune clé, aucun appel réseau) ; répond aussi à vos questions sur vos données |
 | **Tableau de bord** | Trois priorités, prochaine action, agenda et habitudes du jour | Validation avec annulation, report rapide et capture d’une idée |
 | **Calendrier** | Vue semaine (lundi → dimanche, heure par heure) et vue mois, événements récurrents, création par clic sur une plage | Temps planifié par domaine, temps libre, événements tenus (double-clic) |
 | **Tâches** | Priorités, échéances, domaines, durée estimée, rattachement à un business | Ouvertes, en retard, terminées par semaine, charge estimée |
@@ -42,15 +42,28 @@ Il crée : dépenses et revenus, tâches (posées dans l'agenda si vous donnez u
 agenda, habitudes, objectifs et loisirs, avec des périodes (`ce mois`, `la semaine dernière`,
 `en août`, `les 7 derniers jours`).
 
-Conséquences de ce choix : **aucune clé d'API, aucun coût, aucune donnée envoyée, ça marche
-hors-ligne** — mais la compréhension se limite aux tournures prévues. Une phrase non reconnue
+### Dictée au micro
+
+Le bouton micro du chat utilise la reconnaissance vocale intégrée au navigateur
+(`src/lib/speech.ts`, API Web Speech) : toujours aucune clé, aucun service à configurer. Le texte
+dicté s'affiche au fur et à mesure dans le champ, et rien n'est envoyé tant que vous n'avez pas
+relu — sauf si vous cochez *Envoyer sans relire* (le réglage est mémorisé).
+
+Deux précisions honnêtes : la reconnaissance est assurée par le navigateur, et selon lui **l'audio
+peut transiter par son service en ligne** (c'est le cas de Chrome) ; l'analyse du texte, elle, reste
+locale. Et le support dépend du navigateur — Chrome, Edge et Safari le gèrent, Firefox non : dans ce
+cas le bouton n'apparaît simplement pas et tout reste utilisable au clavier. Le micro exige aussi
+HTTPS, ce que Vercel fournit par défaut.
+
+Conséquences du choix « sans IA distante » : **aucune clé d'API, aucun coût, le texte n'est jamais
+envoyé, ça marche hors-ligne** — mais la compréhension se limite aux tournures prévues. Une phrase non reconnue
 n'invente rien : elle est rangée en tâche (et signalée comme telle) ou l'assistant demande une
 reformulation. Tout ce qu'il crée s'annule en un clic.
 
 ## Tests
 
 ```bash
-npm test   # 29 tests : analyse des phrases, réponses, rendu des pages
+npm test   # 34 tests : analyse des phrases, réponses, dictée vocale, rendu des pages
 ```
 
 ## Démarrer en local
