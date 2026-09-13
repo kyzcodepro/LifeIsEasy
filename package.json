@@ -5,6 +5,7 @@
   "type": "module",
   "description": "Planificateur de vie complet : calendrier, finances, business, loisirs, habitudes et objectifs avec tracking partout.",
   "scripts": {
+    "test": "node scripts/test.mjs",
     "test:experience": "node scripts/test-experience.mjs",
     "dev": "vite",
     "build": "tsc -b && vite build",

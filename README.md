@@ -10,6 +10,7 @@ navigateur (localStorage) et s'exportent/s'importent en JSON. Prête à déploye
 
 | Module | Ce qu'il fait | Ce qui est tracké |
 |---|---|---|
+| **Assistant** | Un chat où vous écrivez en français : « j'ai payé 32 € au restaurant hier », « rappelle-moi d'appeler le comptable jeudi à 14h ». L'app crée l'élément au bon endroit et vous pouvez annuler d'un clic | Analyse **100 % locale** (aucune clé, aucun appel réseau) ; répond aussi à vos questions sur vos données |
 | **Tableau de bord** | Trois priorités, prochaine action, agenda et habitudes du jour | Validation avec annulation, report rapide et capture d’une idée |
 | **Calendrier** | Vue semaine (lundi → dimanche, heure par heure) et vue mois, événements récurrents, création par clic sur une plage | Temps planifié par domaine, temps libre, événements tenus (double-clic) |
 | **Tâches** | Priorités, échéances, domaines, durée estimée, rattachement à un business | Ouvertes, en retard, terminées par semaine, charge estimée |
@@ -26,6 +27,31 @@ Autres points : interface en français, responsive (barre de navigation en bas s
 thème clair et sombre, palette de graphiques validée pour le daltonisme et le contraste,
 graphiques SVG maison (aucune dépendance de charting) avec infobulles et **vue tableau** pour
 chaque graphique.
+
+## L'assistant, sans IA distante
+
+La rubrique **Assistant** comprend vos phrases avec un analyseur français écrit dans le projet
+(`src/lib/nlu.ts`) : montants (`32 €`, `17,37 €`, `1 200 €`), dates (`hier soir`, `jeudi`,
+`dans 3 jours`, `le 31 décembre`), heures et plages (`à 14h`, `de 10h à 11h30`), durées
+(`1h30`, `45 min`), catégories devinées par mots-clés, domaine de vie, priorité, et plusieurs
+éléments dans une même phrase (« courses 54 € **et** essence 40 € »).
+
+Il crée : dépenses et revenus, tâches (posées dans l'agenda si vous donnez une heure),
+événements, séances de loisir, habitudes et objectifs. Il répond aussi aux questions
+(`src/lib/qa.ts`) sur vos dépenses, revenus, épargne, patrimoine, budgets, CA, temps, tâches,
+agenda, habitudes, objectifs et loisirs, avec des périodes (`ce mois`, `la semaine dernière`,
+`en août`, `les 7 derniers jours`).
+
+Conséquences de ce choix : **aucune clé d'API, aucun coût, aucune donnée envoyée, ça marche
+hors-ligne** — mais la compréhension se limite aux tournures prévues. Une phrase non reconnue
+n'invente rien : elle est rangée en tâche (et signalée comme telle) ou l'assistant demande une
+reformulation. Tout ce qu'il crée s'annule en un clic.
+
+## Tests
+
+```bash
+npm test   # 29 tests : analyse des phrases, réponses, rendu des pages
+```
 
 ## Démarrer en local
 

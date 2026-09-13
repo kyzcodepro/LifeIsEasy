@@ -8,7 +8,8 @@ export type IconName =
   | 'dashboard' | 'calendar' | 'check' | 'wallet' | 'briefcase' | 'sparkles'
   | 'repeat' | 'target' | 'chart' | 'settings' | 'plus' | 'trash' | 'edit'
   | 'close' | 'chevronLeft' | 'chevronRight' | 'sun' | 'moon' | 'arrowUp'
-  | 'arrowDown' | 'clock' | 'flame' | 'download' | 'upload' | 'search' | 'star';
+  | 'arrowDown' | 'clock' | 'flame' | 'download' | 'upload' | 'search' | 'star'
+  | 'chat' | 'send';
 
 const PATHS: Record<IconName, string> = {
   dashboard: 'M3 3h7v8H3zM14 3h7v5h-7zM14 11h7v10h-7zM3 14h7v7H3z',
@@ -37,6 +38,8 @@ const PATHS: Record<IconName, string> = {
   upload: 'M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12',
   search: 'M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16zM21 21l-4.3-4.3',
   star: 'M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z',
+  chat: 'M20 15a3 3 0 0 1-3 3H8l-5 4V6a3 3 0 0 1 3-3h11a3 3 0 0 1 3 3zM8 9h8M8 13h5',
+  send: 'M22 2 11 13M22 2l-7 20-4-9-9-4z',
 };
 
 export function Icon({ name, size = 17, className }: Props) {
