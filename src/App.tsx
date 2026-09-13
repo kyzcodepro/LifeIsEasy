@@ -118,6 +118,10 @@ export default function App() {
 
   return (
     <div className="app">
+      <a className="skip-link" href="#main-content" onClick={(event) => {
+        event.preventDefault();
+        document.getElementById('main-content')?.focus();
+      }}>Aller au contenu</a>
       <Sidebar current={route} onNavigate={go} badges={badges} />
 
       <div className="main">
@@ -164,7 +168,7 @@ export default function App() {
           </div>
         </header>
 
-        <main className="page">{page()}</main>
+        <main id="main-content" tabIndex={-1} className="page">{page()}</main>
       </div>
 
       <MobileNav current={route} onNavigate={go} />

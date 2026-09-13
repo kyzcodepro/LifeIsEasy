@@ -47,6 +47,24 @@ export function Dashboard({ month, onNavigate }: { month: string; onNavigate: (i
 
   return (
     <>
+      <section className="dashboard-welcome" aria-labelledby="welcome-title">
+        <div className="welcome-copy">
+          <span className="eyebrow">VOTRE QUOTIDIEN, EN PLUS SIMPLE</span>
+          <h2 id="welcome-title">De la place pour<br />ce qui compte.</h2>
+          <p>Un peu d’organisation, beaucoup de liberté.<br />Avancez à votre rythme, un jour à la fois.</p>
+          <button className="btn btn-primary" onClick={() => onNavigate('calendar')}>
+            Organiser ma journée <Icon name="chevronRight" size={16} />
+          </button>
+        </div>
+        <div className="daily-focus">
+          <div className="focus-date"><Icon name="sun" size={18} />{fromISO(now).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}</div>
+          <h3>Chaque petit pas compte.</h3>
+          <button onClick={() => onNavigate('tasks')} className="focus-link"><span><Icon name="check" size={17} /> Tâches à faire aujourd’hui</span><strong>{tasksDue(state, now).length}</strong></button>
+          <button onClick={() => onNavigate('habits')} className="focus-link"><span><Icon name="flame" size={17} /> Habitudes accomplies</span><strong>{habits.filter((h) => habitDone(state, h.id, now)).length}<small> / {habits.length}</small></strong></button>
+          <button onClick={() => onNavigate('goals')} className="focus-bottom">Retrouver mes objectifs <Icon name="chevronRight" size={15} /></button>
+        </div>
+      </section>
+      <div className="section-heading"><h2>L’essentiel du mois</h2><span>{monthLabel(month)}</span></div>
       <div className="grid grid-kpi">
         <StatTile
           label="Patrimoine net"

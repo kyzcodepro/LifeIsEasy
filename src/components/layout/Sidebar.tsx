@@ -21,7 +21,7 @@ export function Sidebar({
         </span>
         <span>
           <span className="brand-name">Life Is Easy</span>
-          <span className="brand-sub">Pilotez toute votre vie</span>
+          <span className="brand-sub">Votre espace pour respirer</span>
         </span>
       </div>
 
@@ -42,6 +42,11 @@ export function Sidebar({
           ))}
         </div>
       ))}
+      <div className="sidebar-note">
+        <Icon name="sparkles" size={20} />
+        <p>Moins de charge mentale.<br /><strong>Plus de vie.</strong></p>
+        <span>Tout commence par un petit pas.</span>
+      </div>
     </aside>
   );
 }
