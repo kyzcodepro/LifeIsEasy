@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Card, EmptyState, StatTile } from '../components/ui/Card';
+import { ShowMore, useRowLimit } from '../components/ui/ShowMore';
 import { Icon } from '../components/ui/Icon';
 import { TransactionModal } from '../components/forms/TransactionModal';
 import { HBarList } from '../components/charts/HBarList';
@@ -35,6 +36,8 @@ export function FinancePage({ month }: { month: string }) {
         .sort((a, b) => b.date.localeCompare(a.date)),
     [state, month, kind, accountId, query],
   );
+
+  const rowLimit = useRowLimit(rows.length);
 
   const catName = (id: string) => state.categories.find((c) => c.id === id)?.name ?? '—';
   const accName = (id: string) => state.accounts.find((a) => a.id === id)?.name ?? '—';
@@ -155,7 +158,7 @@ export function FinancePage({ month }: { month: string }) {
                 </tr>
               </thead>
               <tbody>
-                {rows.map((t) => (
+                {rows.slice(0, rowLimit.limit).map((t) => (
                   <tr key={t.id}>
                     <td className="muted small tnum">{formatDate(t.date)}</td>
                     <td>
@@ -183,6 +186,14 @@ export function FinancePage({ month }: { month: string }) {
                 ))}
               </tbody>
             </table>
+            <ShowMore
+              hidden={rowLimit.hidden}
+              expanded={rowLimit.expanded}
+              total={rows.length}
+              noun="opérations"
+              onShowAll={rowLimit.showAll}
+              onCollapse={rowLimit.collapse}
+            />
           </div>
         ) : (
           <EmptyState icon="wallet" text="Aucune opération sur ce mois avec ces filtres." />

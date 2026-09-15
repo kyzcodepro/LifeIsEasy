@@ -666,16 +666,6 @@ table.data tr:last-child td { border-bottom: none; }
   white-space: nowrap;
 }
 
-.fab {
-  position: fixed;
-  right: 20px;
-  bottom: calc(20px + env(safe-area-inset-bottom));
-  z-index: 40;
-  border-radius: 999px;
-  padding: 12px 18px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22);
-  display: none;
-}
 
 .mobile-nav { display: none; }
 
@@ -695,8 +685,7 @@ table.data tr:last-child td { border-bottom: none; }
   .grid-2, .grid-3, .grid-4 { grid-template-columns: minmax(0, 1fr); }
   .span-2 { grid-column: span 1; }
   .form-grid { grid-template-columns: minmax(0, 1fr); }
-  .fab { display: inline-flex; }
-  .mobile-nav {
+    .mobile-nav {
     display: flex;
     position: fixed;
     bottom: 0; left: 0; right: 0;
@@ -879,8 +868,7 @@ button:focus-visible, a:focus-visible { outline: 3px solid var(--accent); outlin
   .sidebar { display: none; }
   .page { padding: 20px 16px 156px; }
   .topbar { padding: 16px; }
-  .fab { bottom: calc(88px + env(safe-area-inset-bottom)); }
-  .mobile-nav button { min-height: 53px; min-width: 76px; font-size: 12px; }
+    .mobile-nav button { min-height: 53px; min-width: 76px; font-size: 12px; }
   .row-actions { opacity: 1; }
   .completion-feedback { bottom: calc(150px + env(safe-area-inset-bottom)); left: 50%; }
 }
@@ -992,4 +980,173 @@ button:focus-visible, a:focus-visible { outline: 3px solid var(--accent); outlin
 @media (max-width: 580px) {
   .weekly-grid-card { display: none; }
   .mobile-agenda { display: block; }
+}
+
+/* ============================================================
+   Passe de disposition — lisibilité et prise en main
+   Corrige quatre défauts mesurés sur l'application :
+   des cibles de 28 px, des cartes étirées par leur voisine,
+   des listes de vingt lignes déversées d'un bloc, et une barre
+   mobile où sept rubriques sur onze étaient hors de l'écran.
+   ============================================================ */
+
+/* 1. Cibles cliquables : 40 px minimum, y compris dans les tableaux ------- */
+
+.btn-icon,
+.row-actions .btn,
+table.data td .btn {
+  min-width: 40px;
+  min-height: 40px;
+  justify-content: center;
+}
+.row-actions { opacity: 1; gap: 4px; }
+.row-actions .btn,
+table.data td .btn { color: var(--ink-2); }
+.row-actions .btn:hover,
+table.data td .btn:hover { color: var(--ink); background: var(--surface-2); }
+
+/* 2. Les cartes gardent leur hauteur naturelle -------------------------- */
+
+.grid-2,
+.grid-3,
+.grid-4 { align-items: start; }
+
+/* 3. Listes longues : bouton d'expansion sous le tableau ----------------- */
+
+.show-more {
+  display: flex;
+  justify-content: center;
+  padding-top: 14px;
+  margin-top: 6px;
+  border-top: 1px solid var(--grid);
+}
+
+/* 4. Priorités : les deux actions sur une seule ligne -------------------- */
+
+.priority-actions { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 8px; }
+
+/* 5. Menu d'ajout : quatre entrées lisibles ------------------------------ */
+
+.add-menu { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.add-menu-item {
+  flex-direction: column;
+  gap: 8px;
+  padding: 20px 12px;
+  min-height: 92px;
+  justify-content: center;
+}
+
+/* 6. Barre du haut : une seule ligne sur petit écran --------------------- */
+
+@media (max-width: 720px) {
+  /* Titre et actions sur une seule ligne : la barre prenait deux rangées,
+     dont une presque vide, avant le moindre contenu. */
+  .topbar { padding: 10px 16px; gap: 10px; flex-wrap: nowrap; }
+  .topbar .subtitle { display: none; }
+  .topbar-titles { overflow: hidden; }
+  .topbar h1 { font-size: 18px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .topbar-actions { flex-wrap: nowrap; gap: 6px; }
+}
+@media (max-width: 520px) {
+  .topbar-add { min-width: 44px; padding: 10px 12px; }
+  .topbar-add-label { display: none; }
+}
+
+/* 7. Barre du bas : quatre rubriques + « Plus », sans défilement caché --- */
+
+@media (max-width: 860px) {
+  .mobile-nav { overflow: visible; gap: 0; padding: 6px 4px calc(6px + env(safe-area-inset-bottom)); }
+  .mobile-nav button { flex: 1 1 0; min-width: 0; padding: 6px 2px; }
+  .page { padding-bottom: 104px; }
+}
+
+.nav-sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: rgba(11, 11, 11, 0.45);
+  backdrop-filter: blur(3px);
+  display: flex;
+  align-items: flex-end;
+  animation: fade 0.14s ease;
+}
+.nav-sheet {
+  width: 100%;
+  max-height: 82vh;
+  overflow-y: auto;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  border-radius: 22px 22px 0 0;
+  padding: 10px 16px calc(22px + env(safe-area-inset-bottom));
+  box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.25);
+  animation: sheet-up 0.2s ease;
+}
+.nav-sheet-handle {
+  width: 42px;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--surface-3);
+  margin: 4px auto 14px;
+}
+.nav-sheet .nav-group-label { color: var(--ink-muted); padding: 10px 2px 6px; }
+.nav-sheet-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.nav-sheet-item span { min-width: 0; }
+.nav-sheet-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 52px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--ink);
+  font-size: 13.5px;
+  font-weight: 550;
+  line-height: 1.25;
+  text-align: left;
+  cursor: pointer;
+}
+.nav-sheet-item svg { flex: none; }
+.nav-sheet-item[aria-current='page'] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+
+@keyframes sheet-up {
+  from { transform: translateY(16px); opacity: 0.6; }
+  to { transform: none; opacity: 1; }
+}
+
+@media (max-width: 340px) {
+  .add-menu,
+  .nav-sheet-grid { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* 8. Les gestes les plus fréquents méritent une vraie surface -------------
+   Cocher une tâche, valider une habitude, ouvrir un événement : ces trois
+   gestes tombaient entre 14 et 30 px à la souris (le tactile était déjà
+   couvert plus haut). */
+
+.checkbox { width: 32px; height: 32px; }
+.habit-day { width: 34px; height: 34px; }
+.btn-sm { min-height: 34px; min-width: 34px; }
+/* Les filtres de vue (Semaine/Mois, Tout/Dépenses/Revenus) sont des boutons
+   très sollicités : ils passaient sous les 30 px de haut. */
+.segmented button { min-height: 34px; padding-inline: 14px; }
+
+/* L'événement s'ouvre en cliquant n'importe où sur son bloc, et non sur une
+   bande de 14 px de haut. */
+.cal-open {
+  position: absolute;
+  inset: 0;
+  padding: 3px 26px 0 6px;
+  display: block;
+  z-index: 1;
+}
+.cal-event .hr { position: relative; z-index: 0; }
+.cal-validate {
+  width: 24px;
+  height: 24px;
+  z-index: 2;
+  right: 2px;
+  top: 2px;
 }

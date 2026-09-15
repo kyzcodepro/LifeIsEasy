@@ -162,9 +162,9 @@ export default function App() {
               <Icon name={state.settings.theme === 'dark' ? 'moon' : 'sun'} size={17} />
             </button>
 
-            <button className="btn btn-primary" onClick={() => setQuick('menu')}>
-              <Icon name="plus" size={15} />
-              Ajouter
+            <button className="btn btn-primary topbar-add" onClick={() => setQuick('menu')} aria-label="Ajouter un élément">
+              <Icon name="plus" size={16} />
+              <span className="topbar-add-label">Ajouter</span>
             </button>
           </div>
         </header>
@@ -174,23 +174,22 @@ export default function App() {
 
       <MobileNav current={route} onNavigate={go} />
 
-      <button className="btn btn-primary fab" onClick={() => setQuick('capture')}>
-        <Icon name="plus" size={16} />
-        Ajouter
-      </button>
-
       {quick === 'menu' && (
         <Modal title="Que voulez-vous ajouter ?" onClose={() => setQuick(null)}>
-          <div className="grid grid-3" style={{ gap: 10 }}>
-            <button type="button" className="btn" style={{ flexDirection: 'column', padding: 18 }} onClick={() => setQuick('tx')}>
+          <div className="add-menu">
+            <button type="button" className="btn add-menu-item" onClick={() => setQuick('capture')}>
+              <Icon name="sparkles" size={20} />
+              Note rapide
+            </button>
+            <button type="button" className="btn add-menu-item" onClick={() => setQuick('tx')}>
               <Icon name="wallet" size={20} />
               Opération
             </button>
-            <button type="button" className="btn" style={{ flexDirection: 'column', padding: 18 }} onClick={() => setQuick('event')}>
+            <button type="button" className="btn add-menu-item" onClick={() => setQuick('event')}>
               <Icon name="calendar" size={20} />
               Événement
             </button>
-            <button type="button" className="btn" style={{ flexDirection: 'column', padding: 18 }} onClick={() => setQuick('task')}>
+            <button type="button" className="btn add-menu-item" onClick={() => setQuick('task')}>
               <Icon name="check" size={20} />
               Tâche
             </button>

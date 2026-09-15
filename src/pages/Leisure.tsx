@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Card, EmptyState, ProgressBar, StatTile } from '../components/ui/Card';
+import { ShowMore, useRowLimit } from '../components/ui/ShowMore';
 import { Icon } from '../components/ui/Icon';
 import { Modal } from '../components/ui/Modal';
 import { Field, NumberInput, Select, TextArea, TextInput } from '../components/ui/Field';
@@ -31,6 +32,7 @@ export function LeisurePage({ month }: { month: string }) {
   const byActivity = leisureByActivity(state, month);
   const best = byActivity[0];
   const sessions = m.sessions.slice().sort((a, b) => b.date.localeCompare(a.date));
+  const rowLimit = useRowLimit(sessions.length);
 
   return (
     <>
@@ -174,7 +176,7 @@ export function LeisurePage({ month }: { month: string }) {
                 </tr>
               </thead>
               <tbody>
-                {sessions.map((s) => (
+                {sessions.slice(0, rowLimit.limit).map((s) => (
                   <tr key={s.id}>
                     <td className="small muted tnum">{formatDate(s.date)}</td>
                     <td style={{ fontWeight: 550 }}>{state.activities.find((a) => a.id === s.activityId)?.name ?? '—'}</td>
@@ -196,6 +198,14 @@ export function LeisurePage({ month }: { month: string }) {
                 ))}
               </tbody>
             </table>
+            <ShowMore
+              hidden={rowLimit.hidden}
+              expanded={rowLimit.expanded}
+              total={sessions.length}
+              noun="séances"
+              onShowAll={rowLimit.showAll}
+              onCollapse={rowLimit.collapse}
+            />
           </div>
         ) : (
           <EmptyState icon="clock" text="Aucune séance enregistrée ce mois-ci." />

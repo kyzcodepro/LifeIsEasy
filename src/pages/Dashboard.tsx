@@ -38,7 +38,7 @@ export function Dashboard({ onNavigate }: { onNavigate: (id: string) => void }) 
         {priorities.length ? <div className="list">{priorities.map((task, index) => <div className="priority-row" key={task.id}>
           <button className="checkbox" aria-label={`Terminer ${task.title}`} onClick={() => complete(task)}><Icon name="check" size={16} /></button>
           <div className="row-main"><span className="priority-number">0{index + 1}</span><h3>{task.title}</h3><p className="small muted">{task.due ? relativeDay(task.due) : 'Sans échéance'} · {DOMAIN_META[task.domain].label}</p></div>
-          <div className="priority-actions"><button className="btn btn-sm" onClick={() => postpone(task)} aria-label={`Reporter ${task.title} au lendemain`}>Demain</button><button className="btn btn-ghost btn-sm" onClick={() => setPlanning(task)}>Planifier</button></div>
+          <div className="priority-actions"><button className="btn btn-sm" onClick={() => postpone(task)} aria-label={`Reporter ${task.title} au lendemain`}>Reporter</button><button className="btn btn-ghost btn-sm" onClick={() => setPlanning(task)}>Planifier</button></div>
         </div>)}</div> : <EmptyState icon="check" text="Rien à traiter aujourd’hui." />}
       </Card>
       <div className="stack">
@@ -55,9 +55,6 @@ export function Dashboard({ onNavigate }: { onNavigate: (id: string) => void }) 
       </div>
     </div>
     <PersonalScore />
-    <nav className="home-shortcuts" aria-label="Explorer mes espaces">{[
-      ['finance', 'Finances'], ['business', 'Business'], ['recurring', 'Budgets'], ['leisure', 'Loisirs'], ['goals', 'Objectifs'], ['stats', 'Statistiques'],
-    ].map(([id, label]) => <button className="btn btn-ghost" key={id} onClick={() => onNavigate(id)}>{label}<Icon name="chevronRight" size={14} /></button>)}</nav>
     {capturing && <QuickCapture onClose={() => setCapturing(false)} />}
     {planning && <ScheduleTask task={planning} onClose={() => setPlanning(null)} />}
   </>;
