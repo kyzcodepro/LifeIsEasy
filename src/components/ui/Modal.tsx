@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import type { ReactNode } from 'react';
 import { Icon } from './Icon';
+import { useScrollLock } from '../../lib/scrollLock';
 
 interface Props {
   title: string;
@@ -13,6 +14,9 @@ interface Props {
 }
 
 export function Modal({ title, onClose, onSubmit, submitLabel = 'Enregistrer', children, footer, wide }: Props) {
+  // Même verrou que la feuille de navigation : sur mobile, `overflow: hidden`
+  // seul laissait la page défiler derrière la modale.
+  useScrollLock(true);
   const dialog = useRef<HTMLDivElement>(null);
   const returnFocus = useRef(document.activeElement as HTMLElement | null);
   const close = useRef(onClose);
@@ -31,11 +35,8 @@ export function Modal({ title, onClose, onSubmit, submitLabel = 'Enregistrer', c
       }
     };
     document.addEventListener('keydown', onKey);
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
     return () => {
       document.removeEventListener('keydown', onKey);
-      document.body.style.overflow = prev;
       if (returnFocus.current?.isConnected) returnFocus.current.focus();
       else document.getElementById('main-content')?.focus();
     };

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Icon } from '../ui/Icon';
+import { forgetScrollPosition, useScrollLock } from '../../lib/scrollLock';
 import { GROUP_ORDER, PRIMARY_ROUTES, ROUTES } from './Nav';
 
 const GROUPS = GROUP_ORDER;
@@ -59,6 +60,7 @@ export function Sidebar({
 export function MobileNav({ current, onNavigate }: { current: string; onNavigate: (id: string) => void }) {
   const [open, setOpen] = useState(false);
   const inSheet = !PRIMARY_ROUTES.some((r) => r.id === current);
+  useScrollLock(open);
 
   useEffect(() => {
     if (!open) return;
@@ -68,6 +70,7 @@ export function MobileNav({ current, onNavigate }: { current: string; onNavigate
   }, [open]);
 
   const go = (id: string) => {
+    forgetScrollPosition(); // la rubrique suivante s'ouvre en haut
     setOpen(false);
     onNavigate(id);
   };
